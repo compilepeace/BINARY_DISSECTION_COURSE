@@ -1,3 +1,5 @@
+[![HitCount](http://hits.dwyl.io/{username}/{project}.svg)](http://hits.dwyl.io/{username}/{project})
+
 # DISSECTING BINARIES
 Hello people, this course aims at giving an insight regarding the inner details of a binary. Currently, this course focuses only on ELF binaries. It may prove useful to people interested in domains like:
 - Malware Analysis
@@ -64,4 +66,3 @@ You can also email me regarding any queries,<br>
 [SEGMENTS]: ./ELF/SEGMENTS/SEGMENTS.md
 
 
-[![HitCount](http://hits.dwyl.io/{username}/{project}.svg)](http://hits.dwyl.io/{username}/{project})
