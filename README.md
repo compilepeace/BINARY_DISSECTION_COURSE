@@ -62,3 +62,6 @@ You can also email me regarding any queries,<br>
 [RELOCATIONS]: ./ELF/RELOCATIONS/RELOCATIONS.md 
 [SECTIONS]: ./ELF/SECTIONS/SECTIONS.md
 [SEGMENTS]: ./ELF/SEGMENTS/SEGMENTS.md
+
+
+[![HitCount](http://hits.dwyl.io/{username}/{project}.svg)](http://hits.dwyl.io/{username}/{project})
