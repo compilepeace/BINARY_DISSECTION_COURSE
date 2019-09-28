@@ -1,5 +1,5 @@
 #	INTRODUCTION TO THE WORLD OF BINARIES
-Every program (a compiled binary) is just a combination of code and data. The code which are low level instructions deal with the data to produce some output. Since the code and data are embedded inside a single binary file (Executable file), there should be a way for the machine to distinguish between them and the inability of the machine to do so may result in disastrous effects. This is indeed the root cause of *code injection attacks*.<br>
+Every program (a compiled binary) is just a combination of code and data. The code which are low level instructions deal with the data to produce some output. Since the code and data are embedded inside a single binary file, there should be a way for the machine to distinguish between them and the inability of the machine to do so may result in disastrous effects. This is indeed the root cause of *code injection attacks*.<br>
 
 When a source code is compiled, the machine code generated is termed as 'object code' and may be stored in a file. Linker combines one or more of such object code files to produce a final executable binary. Object code generated is one of the blocks of the final executable which may be made up of many such blocks. <br>
 
