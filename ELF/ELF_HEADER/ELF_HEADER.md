@@ -1,7 +1,5 @@
 #	ELF HEADER
-The elf file header is always present at the offset 0 of the executable (Remember FILE OFFSETS from the [Introduction]?). Let's have a look at the ELF header. 
-
-
+The elf file header is always present at the offset 0 of a binary program (remember FILE OFFSETS from the [Introduction]?) and works as a roadmap to parse ELF binary. Let's have a look at it. 
 
 
 ## ANALYSIS
@@ -26,7 +24,7 @@ problably some more crap
 We see here, no meaningful data can be scraped out from this output. Therefore, we ought to use a tool to analyse the information provided by the binary, here comes readelf in action.<br>
 
 ### READELF
-This tool scraps the ELF binary to extract and display some meaningful information from it. The '-h' flag is used to display ELF header of file `hello_64`.
+This tool scraps the ELF binary to extract and display meaningful information from it. The '-h' flag is used to display ELF header of file `hello_64`.
 
 ```shell
 critical@d3ad:~/COURSE_DISECTING_BINARIES/ELF/ELF_HEADER$ readelf -h hello_64       
@@ -64,8 +62,8 @@ typedef struct
   Elf64_Half	e_machine;		/* Architecture */
   Elf64_Word	e_version;		/* Object file version */
   Elf64_Addr	e_entry;		/* Entry point virtual address */
-  Elf64_Off	e_phoff;		/* Program header table file offset */
-  Elf64_Off	e_shoff;		/* Section header table file offset */
+  Elf64_Off     e_phoff;		/* Program header table file offset */
+  Elf64_Off     e_shoff;		/* Section header table file offset */
   Elf64_Word	e_flags;		/* Processor-specific flags */
   Elf64_Half	e_ehsize;		/* ELF header size in bytes */
   Elf64_Half	e_phentsize;		/* Program header table entry size */
@@ -80,8 +78,8 @@ typedef struct
 
 ### ANALYSING EACH FIELD OF ELF HEADER
 
-####  Magic
- Displays 16 hexadecimal bytes in a row. Here the first 4 bytes (7f 45 4c 46) are called magic numbers. Here first byte is fixed (0x7f). These bytes are used to identify an ELF format. Have a look at the ASCII representation of the hex values (type `man ASCII` to open up ASCII table) and see the values of bytes after 0x7f, i.e. 0x45 0x4c 0x46 are 'E', 'L', 'F' respectively. 
+####  Magic (e_ident[EI_NIDNT])
+ e_ident is an array *identifying* the binary in a **processor-independent** fashion, meaning this array is probably the only part which doesn't use encoding of the target processor. It basically works as an identifier for ELF specifying how to decode and interpret the remaining binary. The output above displays 16 hexadecimal bytes in a row. Here the first 4 bytes (7f 45 4c 46) are called magic numbers. These bytes are used to identify an ELF format. Here first byte is fixed (0x7f). Have a look at the ASCII representation of the hex values (type `man ASCII` to open up ASCII table) and see the values of bytes after 0x7f, i.e. 0x45 0x4c 0x46 are 'E', 'L', 'F' respectively. 
 
 
 |  BYTES     |    Description  |
@@ -121,7 +119,7 @@ critical@d3ad:~/COURSE_DISECTING_BINARIES/ELF/ELF_HEADER$ hd -n 16 hello_64
 
 
 ####  Class 
- The value 0x01, Specifies that it is a 64-bit binary, i.e. it contains 64-bit objects. It is the 5th byte in the 'Magic' field.
+ It is the 5th byte in ELF header with value of 0x01, specifying a 64-bit binary, i.e. the entire binary is made up of 64-bit objects.
 
 | Value | Description |
 | :---: | :---------: |
@@ -194,8 +192,8 @@ critical@d3ad:~$ cat /usr/include/elf.h | grep -n -A19 "EI_OSABI"
 157-
 ```
 
-#### TYPE
-Identifies the object file type.
+#### TYPE (e_type)
+MACROs identifying the type of ELF binary (executable, shared object, relocatable and CORE dumps).
 
 ```shell
 critical@d3ad:~/COURSE_DISECTING_BINARIES/Introduction$ cat /usr/include/elf.h | grep -n -A9 "ET_NONE"
@@ -211,7 +209,7 @@ critical@d3ad:~/COURSE_DISECTING_BINARIES/Introduction$ cat /usr/include/elf.h |
 171-#define ET_HIPROC	0xffff		/* Processor-specific range end */
 ```
 
-#### MACHINE
+#### MACHINE (e_machine)
 It is the machine specification required to properly run this ELF.
 ```shell
 critical@d3ad:~$ cat /usr/include/elf.h | grep -n -A190 "EM_NONE"
@@ -230,7 +228,7 @@ critical@d3ad:~$ cat /usr/include/elf.h | grep -n -A190 "EM_NONE"
 And tons of other machine types (nearly 200)
 ```
 
-#### VERSION
+#### VERSION (e_version)
 Specifies the version of the file. (not the ELF header's)
 
 ```shell
@@ -241,35 +239,64 @@ critical@d3ad:~$ cat /usr/include/elf.h | grep -n -A4 "EV_NONE"
 381-
 ```
 
-#### ENTRY POINT ADDRESS
-This specifies the address where the execution of the program starts (.text section)(explained later in the course). If you have ever programmed in C language, it is usually the address of the `main()` function and usually address of `_start` (in assembly programming). 
+#### ENTRY POINT ADDRESS (e_entry)
+This specifies the address where the execution of the program starts. If you've ever programmed in C/C++ languages or read books regarding the same, you may have read - **execution of the program always begins from main()**. While this introductory statement might be helpful to beginners, it is **not** an absolulte truth. Let's examine what location does this entry point address point to.
+```
+critical@d3ad:~$ readelf -h hello_32 | grep Entry
+  Entry point address:               0x80482e0
 
-#### START OF PROGRAM HEADERS
-It is the offset to the **P**rogram **H**eader **T**able (**PHT**) (explained later in the course), from the very first byte in the file (0x7f present at offset 0).
+critical@d3ad:~$ objdump -d ./hello_32 | grep -A18 80482e0
+080482e0 <_start>:
+ 80482e0:	31 ed                	xor    %ebp,%ebp
+ 80482e2:	5e                   	pop    %esi
+ 80482e3:	89 e1                	mov    %esp,%ecx
+ 80482e5:	83 e4 f0             	and    $0xfffffff0,%esp
+ 80482e8:	50                   	push   %eax
+ 80482e9:	54                   	push   %esp
+ 80482ea:	52                   	push   %edx
+ 80482eb:	e8 23 00 00 00       	call   8048313 <_start+0x33>
+ 80482f0:	81 c3 10 1d 00 00    	add    $0x1d10,%ebx
+ 80482f6:	8d 83 70 e4 ff ff    	lea    -0x1b90(%ebx),%eax
+ 80482fc:	50                   	push   %eax
+ 80482fd:	8d 83 10 e4 ff ff    	lea    -0x1bf0(%ebx),%eax
+ 8048303:	50                   	push   %eax
+ 8048304:	51                   	push   %ecx
+ 8048305:	56                   	push   %esi
+ 8048306:	c7 c0 f6 83 04 08    	mov    $0x80483f6,%eax
+ 804830c:	50                   	push   %eax
+ 804830d:	e8 ae ff ff ff       	call   80482c0 <__libc_start_main@plt>
+ 8048312:	f4                   	hlt 
+```
+As you can see, entry point address (0x80482e0) points to a label named `_start`. If you've ever programmed in assembly you might already be familiar of `_start`, which marks the beginning of programmer specified instructions. In C/C++ compiled binaries, this routine is embedded by the compiler which acts as initialization code to setup environment for the execution of `main()` as specified by the programmer. <br>
+So, where is the **main()** and how is it called ? <br>
+**main()** is called by **__libc_start_main()**. Analysing this function call, we can know what parameters it takes by looking at what all is pushed onto the stack. Search out the function prototype for **__libc_start_main()** and also read **x86 calling conventions**. Can you figure out the address of main() by yourself ?
 
-#### START OF SECTION HEADERS
-It is the offset to the **S**ection **H**eader **T**able (**SHT**) (explained later in the course), from the very first byte in the file (0x7f present at offset 0).
+#### START OF PROGRAM HEADERS (e_phoff)
+It specifies the offset to the **P**rogram **H**eader **T**able (**PHT**) (explained later in the course), from the very first byte in the file.
 
-#### FLAGS
-`EFLAGS` register is set to this value when the program is loaded into memory.
+#### START OF SECTION HEADERS (e_shoff)
+It specifies the offset to the **S**ection **H**eader **T**able (**SHT**) (explained later in the course), from the very first byte in the file.
 
-#### SIZE OF THIS HEADER
-Displays the size of this 'ELF Header'
+#### FLAGS (e_flags)
+The `EFLAGS` register is set to this value when the program is loaded into memory.
 
-#### SIZE OF PROGRAM HEADERS
-Displays size of each segment in bytes.
+#### SIZE OF THIS HEADER (e_ehsize)
+Identifies the size of this 'ELF Header'
 
-#### NUMBER OF PROGRAM HEADERS
-Displays the number of Program Headers (Segments) in the file.
+#### SIZE OF PROGRAM HEADERS (e_phentsize)
+Identifies the size of each entry in PHT.
 
-#### SIZES OF SECTION HEADERS
+#### NUMBER OF PROGRAM HEADERS (e_phnum)
+Displays the number of Program Headers (Segments) in the PHT.
+
+#### SIZES OF SECTION HEADERS (e_shentsize)
 Displays size of each section header.
 
-#### NUMBER OF SECTION HEADERS
-Specifies the number of section headers (starting from the NULL entry).
+#### NUMBER OF SECTION HEADERS (e_shnum)
+Specifies the number of section headers (starting from the NULL entry) in SHT.
 
-#### SECTION HEADER STRING TABLE INDEX
-The value is 26. It means the section at index number 26 (in Section Header Table), stores all the section names (which are NULL terminated strings).
+#### SECTION HEADER STRING TABLE INDEX (e_shstrndx)
+The value is 26. It means the section at index number 26 (in Section Header Table), stores all the section names (which are NULL terminated ASCII strings). Let's have a look at this section.
 
 
 ```shell
@@ -303,13 +330,11 @@ String dump of section '.shstrtab':
   [    eb]  .bss
   [    f0]  .comment
 
-
 ```
 
 
-
 ## NOTE
-  You can't mug up these things. All this will start making sense after getting some hands on disecting and understanding the ELF binaries. We'll now start with the SHT and the PHT. This was designed to give you an entry point in disection of binaries and so that later on after you complete the course it could prove out to be a good review material :)
+  You can't mug up these things. All this will start making sense after getting some hands on disecting and analysing ELF binaries. We'll now start with SHT and PHT. This was designed to give you an entry point into binary dissection :)
 
 
 <br>

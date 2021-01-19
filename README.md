@@ -1,18 +1,19 @@
 
 
 # DISSECTING BINARIES
-Hello people, this course aims at giving an insight regarding the inner details of a binary. Currently, this course focuses only on ELF binaries. It may prove useful to people interested in domains like:
-- Malware Analysis
-- Reverse Engineering
-- Writing low level softwares (bootloaders or Operating systems)
+Hello people, this course aims at giving an insight into the inner details of a binary program. Currently, this course focuses only on ELF binaries. It may prove useful to people interested in domains like:
+- Malware analysis 
+- Reverse engineering
 - Binary Instrumentation
-- Backdooring binaries
 - Binary Exploitation
+- Linkers & loaders
+- Writing low level softwares (binary protectors/packers, bootloaders, operating systems etc.)
+- Virus research x_x
 
 
 
 ## PRE-REQUISITES
-A familiarity with the Linux working environment and experince with some programming languages (not absolutely necessary though) would be appreciated. No issues, if you don't know much, even I am a noob :) I am working on UBUNTU 18.04 (x86_64 bit) as my host machine (We'll be doing cross-compilation for x86_32 bit architecture whenever required). 
+A familiarity with the Linux working environment and experince with some programming languages (not absolutely necessary though) would help significantly. There are parts of the course which may not make sense at first or may need cross referencing with [official ELF specifications], so don't hesitate to go through it. I am working on UBUNTU 18.04 (x86_64 bit) as my host machine (We'll be doing cross-compilation for x86_32 bit architecture whenever required). 
 
 
 ## TABLE OF CONTENT
@@ -47,14 +48,14 @@ gcc -no-pie hello.c -o hello_64
 ```
 
 ## CONTRIBUTIONS AND ISSUES
-Please let me know if something needs to be corrected or if you're having any doubts regarding some topic or if some topic is not clear. Feel free to open issues regarding the same and I'll be happy to help :)
+I am open to suggestions and corrections. Please feel free to open up any issues or reach me out via email :)
 
 <br>
 
-You can also email me regarding any queries,<br>
 **NAME** : **ABHINAV THAKUR**<br>
 **EMAIL**: **compilepeace@gmail.com**
 
+[official ELF specifications]: https://refspecs.linuxfoundation.org/elf/elf.pdf
 [Introduction to world of Binaries]: ./Introduction/Introduction.md
 [Executable and Linkable Format (ELF)]: ./ELF/ELF.md
 [ELF HEADER]: ./ELF/ELF_HEADER/ELF_HEADER.md

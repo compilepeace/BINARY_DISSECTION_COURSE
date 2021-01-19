@@ -1,9 +1,11 @@
 #	PHT (PROGRAM HEADER TABLE)
-The `Program Header Table` is an array of structures, each structure descring a segment and providing information the system needs to prepare the program for execution (reference : man elf). Segments hold one or more sections. PHT displays the mapping of Section to Segments, i.e. which segments constitutes of which sections. 
+The `Program Header Table` is an array of structures, each structure descring a segment and providing information the system needs to prepare the program for execution (reference : man elf), i.e. it describes the execution view of any ELF binary. Segments hold one or more sections. PHT can be parsed to display a **Sections to Segment** mapping, i.e. which segment in memory will store what sections of binary.
 
-The linker uses a **linker script** to map sections with segments. We can indeed prepare our own linker script and tell the linker (ld) explicitly to use that linker script to prepare an executable (unlike the default one it uses - [default_linker_script]). The default linker script can be seen with the command `ld --verbose`. Linker scripts is a topic for some other time and also out of scope for this course.<br>
+The compile-time linker uses a **linker script** to map sections with segments. We can indeed prepare our own linker script and tell the linker (/usr/bin/ld) explicitly to use that linker script to prepare an executable (unlike the default one it uses - [default_linker_script] which can be seen with the command `ld --verbose`). Writing linker scripts is a topic which is out of scope for this course.<br>
 
-Lets have a look at the program header of the file [pht] compiled from the source [pht.c]. We'll use `-l` option of readlef, which displays the *Program Headers/Segments* for the executable.
+**NOTE**: The program header table is actually meaningful only to binaries that are likely to build up into their process images (executable & shared objects). Relocatable binaries doesn't require a PHT as they are to be processed by the static linker before being able to execute in memory.
+
+Lets have a look at the program header table of the file [pht] compiled from the source [pht.c]. We'll use `-l` option of readelf, which displays the *Program Headers/Segments* for the executable.
 
 ```shell
 critical@d3ad:~/BINARY_DISECTION_COURSE/ELF/PROGRAM_HEADER_TABLE$ readelf -l pht
@@ -49,7 +51,7 @@ Program Headers:
 ```
 
 ##  ANALYSING THE OUTPUT 
-Let's analyse the output piece by piece. The first line tells us about the file type. The program header is meaningful only to *executable files* and *shared object files*. The first 3 lines, I guess are pretty much self explanatory, explaining the file type, the entry point of the program and the number of program headers.
+Let's analyse the output piece by piece. The first 3 lines, I guess are pretty much self explanatory, explaining the file type, the entry point of the program and the number of program headers.
 
 ```shell
 Elf file type is EXEC (Executable file)
@@ -85,13 +87,13 @@ Program Headers:
 ```
 
 
-is actually a structure (shown bellow) named `Elf64_Phdr` (`Elf32_Phdr` on a 32-bit platform) defined in `/usr/include/elf.h` which describes the Program header of an ELF. 
+Each program header or PHT entry is actually a C structure (shown bellow) named `Elf64_Phdr` (`Elf32_Phdr` on a 32-bit platform) defined in `/usr/include/elf.h`.
 ```shell
 critical@d3ad:~$ cat /usr/include/elf.h | grep -B9 " Elf64_Phdr"
 { 
   Elf64_Word	p_type;			/* Segment type */
   Elf64_Word	p_flags;		/* Segment flags */
-  Elf64_Off	p_offset;		/* Segment file offset */
+  Elf64_Off	    p_offset;		/* Segment file offset */
   Elf64_Addr	p_vaddr;		/* Segment virtual address */
   Elf64_Addr	p_paddr;		/* Segment physical address */
   Elf64_Xword	p_filesz;		/* Segment size in file */
