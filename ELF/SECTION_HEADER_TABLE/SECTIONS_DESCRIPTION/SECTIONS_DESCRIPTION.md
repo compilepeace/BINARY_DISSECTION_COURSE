@@ -415,4 +415,4 @@ Stores the relocation table for the fixup of **function symbols** during dynamic
 [here]: http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html
 
 [PREV - SECTION HEADER TABLE]: ./../SHT.md
-[NEXT - PROGRAM HEADER TABLE]: ./fa../../PROGRAM_HEADER_TABLE/PHT.md
+[NEXT - PROGRAM HEADER TABLE]: ./../../PROGRAM_HEADER_TABLE/PHT.md
