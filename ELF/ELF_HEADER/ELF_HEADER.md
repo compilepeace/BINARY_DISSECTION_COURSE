@@ -332,6 +332,18 @@ String dump of section '.shstrtab':
 
 ```
 
+Below is how you can programatically parse ELF header using low-level structures provided by `/usr/include/elf.h` (in case someone likes to write their own toolset to play around with low-level mechanisms in the ELF world). Please look [parse_elf_header.c] for full source. Here parameter `map` is the address where the target binary is **memory mapped** `(mmap)` in our calling process address space.
+```
+void parseElfHeader (uint8_t *map) {
+	Elf64_Ehdr *ehdr = (Elf64_Ehdr *) map;
+
+	fprintf (stderr, "Entry point: 0x%lx\n", ehdr->e_entry);
+
+	/* Similarly, one can access any field of ELF header */
+}
+
+```
+
 
 ## NOTE
   You can't mug up these things. All this will start making sense after getting some hands on disecting and analysing ELF binaries. We'll now start with SHT and PHT. This was designed to give you an entry point into binary dissection :)
@@ -344,5 +356,7 @@ String dump of section '.shstrtab':
 
 [Introduction]: ./../../Introduction/Introduction.md
 [hello.c]: ./hello.c
+[parse_elf_header.c]: ./parse_elf_header.c
+
 [PREV - ELF]: ./../ELF.md
 [NEXT - SECTION HEADER TABLE]: ./../SECTION_HEADER_TABLE/SHT.md

@@ -124,13 +124,90 @@ Here, <br>
 * **Size (sh_size)** of the section is `0x0000000000000172` bytes (representing on-disk size).<br>
 * **ES (sh_entsize)** holds the single entry size for the sections that hold a table of fixed-sized entries.<br>
 * **Flags (sh_flags)** set are `AX`, i.e. for 'Allocate' and 'Execute', meaning that memory should be allocated for this section at the runtime and that this section is supposed to be executable. The `A` flag set on a section means that the section will be present and loaded into the memory at the runtime unlike the sections without 'A' flag which will not be loaded into memory at the time of execution of program.<br>
-* **Link (sh_link)** and **Info (sh_info)** are 0 meaning that this section does not link to any section or entry in the table.<br>
+* **Link (sh_link)** and **Info (sh_info)** These 2 fields hold special information and are valid only for a few sections. All other sections have this field zeroed out as we can see here - `.text` section doesn't link to any other section or entry in SHT. The interpretation is described below (taken from [ELF specifications v1.2]).<br>
+<p align="center">
+  <img src="./../IMAGES/link_info_Shdr.png">
+</p>
+
 * **Align (sh_addralign)** is 16 which means that the offset `0x00000400`, should be divisible by 16(0x10), i.e. 0x00000400/0x10 = 0x0000040 (divisible by 16)
 <br>
 
 
 
-Go through each section names and analyse the Section Header Table (at least to be familiarised with the output). Now, I guess we understand how to read the output of `readelf`. Next, we'll dig a little deeper  to gain an understanding on the purpose of various sections listed in section header table.
+Go through each section names and analyse the Section Header Table (at least to be familiarised with the output). Now, I guess we understand how to read the output of `readelf`. <br>
+
+Below is how you can programatically parse SHT. Please look [parse_sht.c] for full source. I guess, e_shoff (SHT offset) and e_shnum (number of entries in SHT) as provided by the ELF header are enough to parse the entire SHT.
+
+```
+void parseSht (uint8_t *map) {
+	Elf64_Ehdr *ehdr = (Elf64_Ehdr *) map;
+	Elf64_Shdr *sht  = (Elf64_Shdr *) &map[ehdr->e_shoff];
+	char *shstrtab   = &map[ sht[ehdr->e_shstrndx].sh_offset ]; 
+
+	fprintf (stderr, "shstrtab: first string: %s\n", shstrtab);
+
+	for (int i = 0; i < ehdr->e_shnum; ++i) {
+
+		/* sh_name */
+		fprintf (stderr, "[%d] %s\n\t", i, &shstrtab[sht[i].sh_name]);
+		
+		/* sh_type */
+		switch (sht[i].sh_type) {
+			case SHT_NULL: 		fprintf (stderr, "NULL");
+				       			break;
+			case SHT_PROGBITS:	fprintf (stderr, "PROGBITS");
+					  			break;
+			case SHT_SYMTAB:	fprintf (stderr, "SYMTAB");
+								break;
+			case SHT_STRTAB: 	fprintf (stderr, "STRTAB");
+								break;
+			case SHT_RELA:		fprintf (stderr, "RELA");
+								break;
+			case SHT_GNU_HASH:  fprintf (stderr, "GNU HASH");
+								break;
+			case SHT_DYNAMIC:   fprintf (stderr, "DYNAMIC");
+                                break;
+			case SHT_NOTE:      fprintf (stderr, "NOTE");
+                                break;
+            case SHT_NOBITS:    fprintf (stderr, "NOBITS");
+                                break;
+			case SHT_REL:       fprintf (stderr, "REL");
+                                break;
+            case SHT_SHLIB:     fprintf (stderr, "SHLIB");
+                                break;
+			case SHT_DYNSYM:    fprintf (stderr, "DYNSYM");
+                                break;
+            case SHT_LOPROC:    fprintf (stderr, "LOPROC");
+                                break;
+			case SHT_HIPROC:    fprintf (stderr, "HIPROC");
+                                break;
+            case SHT_LOUSER:    fprintf (stderr, "LOUSER");
+                                break;
+			case SHT_HIUSER:    fprintf (stderr, "HIUSER");
+                                break;
+            default:			fprintf (stderr, "Unknown Section");
+								break;	
+		}		
+		fprintf (stderr, "\t");
+
+		/* sh_flags */
+		if (sht[i].sh_flags & SHF_WRITE)	fprintf (stderr, "W");
+		else								fprintf (stderr, " ");
+		if (sht[i].sh_flags & SHF_ALLOC)	fprintf (stderr, "A");
+											fprintf (stderr, " ");
+		if (sht[i].sh_flags & SHF_EXECINSTR)fprintf (stderr, "X");
+											fprintf (stderr, " ");
+		if (sht[i].sh_flags & SHF_MASKPROC) fprintf (stderr, "M");
+											fprintf (stderr, " ");
+		fprintf (stderr, "\t");
+
+		/* Similarly, one can access any field of a section header */
+
+		fprintf (stderr, "\n");
+	}	
+}	
+```
+Similarly, we can access any field inside a section header. Next, we'll dig a little deeper  to gain an understanding on the purpose of various sections listed in section header table.
 
 <br>
 
@@ -141,5 +218,8 @@ Go through each section names and analyse the Section Header Table (at least to 
 
 [main]: ./main
 [SECTION TYPES]: ./../IMAGES/SECTION_TYPES.png
+[ELF specifications v1.2]: https://refspecs.linuxfoundation.org/elf/elf.pdf
+[parse_sht.c]: ./parse_sht.c
+
 [PREV - ELF HEADER]: ./../ELF_HEADER/ELF_HEADER.md
 [NEXT - SECTIONS DESCRIPTION]: ./SECTIONS_DESCRIPTION/SECTIONS_DESCRIPTION.md

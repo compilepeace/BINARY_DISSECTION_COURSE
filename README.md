@@ -1,7 +1,7 @@
 
 
-# DISSECTING BINARIES
-Hello people, this course aims at giving an insight into the inner details of a binary program. Currently, this course focuses only on ELF binaries. It may prove useful to people interested in domains like:
+# BINARY DISSECTION PRIMER
+Hello reader, this primer aims at giving an insight into the inner details of a binary program. Currently, its only focus is on the native file format for Linux binaries, i.e. **E**xecutable and **L**inkable **F**ormat (shortly used as **ELF**). It may prove useful to security researchers or curiosity-driven individuals interested in below mentioned or domains similar to:
 - Malware analysis 
 - Reverse engineering
 - Binary Instrumentation
@@ -13,7 +13,7 @@ Hello people, this course aims at giving an insight into the inner details of a 
 
 
 ## PRE-REQUISITES
-A familiarity with the Linux working environment and experince with some programming languages (not absolutely necessary though) would help significantly. There are parts of the course which may not make sense at first or may need cross referencing with [official ELF specifications], so don't hesitate to go through it. I am working on UBUNTU 18.04 (x86_64 bit) as my host machine (We'll be doing cross-compilation for x86_32 bit architecture whenever required). 
+A familiarity with the Linux environment and experince with some programming language(s) (not absolutely necessary though) would significantly help in having a greater understanding. There are parts of the course which may not make sense at first or may need cross referencing with [official ELF specifications], so don't hesitate to open it up whenever the need calls. I am working on UBUNTU 18.04 (x86_64 bit) as my host machine (We'll be doing cross-compilation for x86_32 bit architecture whenever required). 
 
 
 ## TABLE OF CONTENT
@@ -23,10 +23,11 @@ A familiarity with the Linux working environment and experince with some program
    * [SECTION HEADER TABLE]
    * [SECTIONS DESCRIPTION] 
    * [PROGRAM HEADER TABLE]
+   * [SYMBOLS AND DEFINITIONS]
   
 
 ## USAGE
-All the files used in this course are linked and can be downloaded to reproduce the results on your system. First clone the repository on your local system. To do this type the bellow given commands.
+All the files used in this primer are linked and can be downloaded to reproduce the results on your system. To follow up with the content you may need compiled binaries for which I suggest you to clone the repository on your local system by typing the bellow given commands.
 
 ```shell
 critical@d3ad:~$ git clone https://github.com/compilepeace/BINARY_DISSECTION_COURSE
@@ -48,7 +49,7 @@ gcc -no-pie hello.c -o hello_64
 ```
 
 ## CONTRIBUTIONS AND ISSUES
-I am open to suggestions and corrections. Please feel free to open up any issues or reach me out via email :)
+I am open to suggestions and corrections. Also, you may like to watch the repository for updates before forking. Please feel free to open up any issues or reach me out via email :)
 
 <br>
 
@@ -62,8 +63,6 @@ I am open to suggestions and corrections. Please feel free to open up any issues
 [SECTION HEADER TABLE]: ./ELF/SECTION_HEADER_TABLE/SHT.md
 [SECTIONS DESCRIPTION]: ./ELF/SECTION_HEADER_TABLE/SECTIONS_DESCRIPTION/SECTIONS_DESCRIPTION.md
 [PROGRAM HEADER TABLE]: ./ELF/PROGRAM_HEADER_TABLE/PHT.md
-[RELOCATIONS]: ./ELF/RELOCATIONS/RELOCATIONS.md 
-[SECTIONS]: ./ELF/SECTIONS/SECTIONS.md
-[SEGMENTS]: ./ELF/SEGMENTS/SEGMENTS.md
+[SYMBOLS AND DEFINITIONS]: ./ELF/SYMBOLS/SYMBOLS.md 
 
 

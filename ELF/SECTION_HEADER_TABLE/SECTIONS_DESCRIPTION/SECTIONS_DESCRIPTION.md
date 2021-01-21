@@ -83,13 +83,13 @@ Look at the address of the symbol `0000000000201010 <global_var>`, it is the nam
 
 
 ### .BSS SECTION
-BSS here stands for **B**lock **S**tarted by **S**ymbol. This section stores the uninitialized data of the program. Any variable in this section is cleared with 0. In SHT, this section header entry is marked as sh_type SH_NOBITS as .bss section does not occupy any space on disk (to avoid wastage of disk space as the memory for this section is going to get cleared anyways)
+BSS here stands for **B**lock **S**tarted by **S**ymbol. This section stores the uninitialized data of the program. Any variable in this section is cleared with 0. In SHT, this section header entry is marked as sh_type SHT_NOBITS as .bss section does not occupy any space on disk (to avoid wastage of disk space as the memory for this section is going to get cleared anyways)
 
 
 ## FOR MALWARE RESEARCHERS (and probably other low-level domains)
 
 ### .SHSTRTAB 
-This is a string table for SHT which stores **section names** (in the form of NULL terminated strings). It is used by compile-time linker and tools like readelf to identify sections. Use the following options with readelf -
+This is a string table for section headers which stores **section names** (in the form of NULL terminated strings). It is used by compile-time linker and tools like readelf to identify sections. Use the following options with readelf -
 * `-x` : To dump content of section in hexadecimal format.
 * `-p` : To dump content of section in the form of strings.<br>
  
@@ -129,139 +129,11 @@ String dump of section '.shstrtab':
 ```
 
 ### .SYMTAB AND .DYNSYM 
-In high level programming languages like C/C++, the programmer uses function names that are used as **symbolic name** to represent a particular location (in file or memory). Similarly, all global/static/external variable names are also symbolic representations to some location. Together, we have what we call **function** and **data symbols**, i.e. symbols that represent *routines* and *variables* respectively.<br> 
-There are 3 stages at which symbol resolution occurs - 
-* **Compile-time fixup**: relocatable binaries (object files) have both function and data symbols which are resolved by the compile-time linker ld (the one which stiches up one or more object files into final executable binary). After this fixup, the final executable contains an address marking those symbol locations.
-* **runtime fixup**: there are certain symbolic names which are external to the binary we are executing and whose location cannot be known until the runtime. One such example is the symbol resolution of **printf()** which is not defined inside our binary and rather inside *libc.so* (which is the Standard C library - remember one of the type of binaries on Linux is the shared object). To replace the call to printf() with an address, we need to know at what base address is *libc.so* loaded into memory which cannot be determined until the program execution (runtime). Therefore, dynamic symbols are resolved at runtime by the dynamic linker (ld-linux.so).
-* **lazy binding**: A shared library being used by any program contains many functions whose addresses needs to be resolved by the dynamic linker before they can be used. To save a significant amount of load and linking time, external function symbol resolution (like printf() from libc.so) is postponed to the first time that function is called by the program. This This is known as lazy binding or **delay loading** or **lazy loading** (term varies from one platfrom to the other). Ask yourself, why would someone care to fixup a library function address which is never getting called by the program ? This indeed saves a significant amount of program startup time! We'll discuss its mechanism probably later in the course.
 
+In a computer program, symbols just represent memory locations (which may be a function or perhaps a variable location). The section **\.symtab** contains the static symbols used in the compile-time linking whereas the section **\.dynsym** contains the Runtime/Dynamic symbols refered by the dynamic linker during program execution. Static symbols are removed if the binary is stripped since they are resolved and wouldn't contribute to execution of a program. The symbols external to the program (one's that are exported by shared libraries - DLL's or SO's) are also stored in .dynsym section. 
 
-**NOTE**: Don't confuse ld (compile-time linker a.k.a static linker) with ld.so (dynamic linker). The **compile-time linker (ld)** is a part of the **compiler toolchain** and is responsible for generating the final executable binary from source code while **dynamic linker** (`ld-linux.so` or simply `ld.so`) links the binary program with shared libraries (at runtime, i.e. in memory). The dynamic linker also goes by the name of **runtime linker** and **program interpreter**. I personally have been mindfucked for months while understanding machine level concepts remaining confused in linkers and loaders (it was when I felt lack of beginner friendly resources).
+**NOTE**: [Symbols] and dynamic linking are explained later in the course.
 
-The section **\.symtab** contains the static symbols used in the compile-time linker whereas the section **\.dynsym** contains the Runtime/Dynamic symbols used throughout the program. Static symbols are removed if the binary is stripped since they are resolved and wouldn't contribute to execution of a program. The symbols exported by shared libraries (DLL's or SO's) are also stored in .dynsym section. Let's look at the symbols with `-s` options in readelf which displays the symbol tables (both static and dynamic).
-
-```shell
-critical@d3ad:~/BINARY_DISECTION_COURSE/ELF/SECTION_HEADER_TABLE/SECTIONS_DESCRIPTION$ readelf -s sd
-
-Symbol table '.dynsym' contains 7 entries:
-   Num:    Value          Size Type    Bind   Vis      Ndx Name
-     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
-     1: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterTMCloneTab
-     2: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND puts@GLIBC_2.2.5 (2)
-     3: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main@GLIBC_2.2.5 (2)
-     4: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__
-     5: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMCloneTable
-     6: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND __cxa_finalize@GLIBC_2.2.5 (2)
-
-Symbol table '.symtab' contains 65 entries:
-   Num:    Value          Size Type    Bind   Vis      Ndx Name
-     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
-     1: 0000000000000238     0 SECTION LOCAL  DEFAULT    1 
-     2: 0000000000000254     0 SECTION LOCAL  DEFAULT    2 
-     3: 0000000000000274     0 SECTION LOCAL  DEFAULT    3 
-     4: 0000000000000298     0 SECTION LOCAL  DEFAULT    4 
-     5: 00000000000002b8     0 SECTION LOCAL  DEFAULT    5 
-     6: 0000000000000360     0 SECTION LOCAL  DEFAULT    6 
-     7: 00000000000003e2     0 SECTION LOCAL  DEFAULT    7 
-     8: 00000000000003f0     0 SECTION LOCAL  DEFAULT    8 
-     9: 0000000000000410     0 SECTION LOCAL  DEFAULT    9 
-    10: 00000000000004d0     0 SECTION LOCAL  DEFAULT   10 
-    11: 00000000000004e8     0 SECTION LOCAL  DEFAULT   11 
-    12: 0000000000000500     0 SECTION LOCAL  DEFAULT   12 
-    13: 0000000000000520     0 SECTION LOCAL  DEFAULT   13 
-    14: 0000000000000530     0 SECTION LOCAL  DEFAULT   14 
-    15: 00000000000006e4     0 SECTION LOCAL  DEFAULT   15 
-    16: 00000000000006f0     0 SECTION LOCAL  DEFAULT   16 
-    17: 0000000000000708     0 SECTION LOCAL  DEFAULT   17 
-    18: 0000000000000748     0 SECTION LOCAL  DEFAULT   18 
-    19: 0000000000200db8     0 SECTION LOCAL  DEFAULT   19 
-    20: 0000000000200dc0     0 SECTION LOCAL  DEFAULT   20 
-    21: 0000000000200dc8     0 SECTION LOCAL  DEFAULT   21 
-    22: 0000000000200fb8     0 SECTION LOCAL  DEFAULT   22 
-    23: 0000000000201000     0 SECTION LOCAL  DEFAULT   23 
-    24: 0000000000201014     0 SECTION LOCAL  DEFAULT   24 
-    25: 0000000000000000     0 SECTION LOCAL  DEFAULT   25 
-    26: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
-    27: 0000000000000560     0 FUNC    LOCAL  DEFAULT   14 deregister_tm_clones
-    28: 00000000000005a0     0 FUNC    LOCAL  DEFAULT   14 register_tm_clones
-    29: 00000000000005f0     0 FUNC    LOCAL  DEFAULT   14 __do_global_dtors_aux
-    30: 0000000000201014     1 OBJECT  LOCAL  DEFAULT   24 completed.7696
-    31: 0000000000200dc0     0 OBJECT  LOCAL  DEFAULT   20 __do_global_dtors_aux_fin
-    32: 0000000000000630     0 FUNC    LOCAL  DEFAULT   14 frame_dummy
-    33: 0000000000200db8     0 OBJECT  LOCAL  DEFAULT   19 __frame_dummy_init_array_
-    34: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS sd.c
-    35: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS crtstuff.c
-    36: 000000000000084c     0 OBJECT  LOCAL  DEFAULT   18 __FRAME_END__
-    37: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
-    38: 0000000000200dc0     0 NOTYPE  LOCAL  DEFAULT   19 __init_array_end
-    39: 0000000000200dc8     0 OBJECT  LOCAL  DEFAULT   21 _DYNAMIC
-    40: 0000000000200db8     0 NOTYPE  LOCAL  DEFAULT   19 __init_array_start
-    41: 0000000000000708     0 NOTYPE  LOCAL  DEFAULT   17 __GNU_EH_FRAME_HDR
-    42: 0000000000200fb8     0 OBJECT  LOCAL  DEFAULT   22 _GLOBAL_OFFSET_TABLE_
-    43: 00000000000006e0     2 FUNC    GLOBAL DEFAULT   14 __libc_csu_fini
-    44: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_deregisterTMCloneTab
-    45: 0000000000201000     0 NOTYPE  WEAK   DEFAULT   23 data_start
-    46: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND puts@@GLIBC_2.2.5
-    47: 0000000000201014     0 NOTYPE  GLOBAL DEFAULT   23 _edata
-    48: 00000000000006e4     0 FUNC    GLOBAL DEFAULT   15 _fini
-    49: 0000000000201010     4 OBJECT  GLOBAL DEFAULT   23 global_var
-    50: 0000000000000000     0 FUNC    GLOBAL DEFAULT  UND __libc_start_main@@GLIBC_
-    51: 0000000000201000     0 NOTYPE  GLOBAL DEFAULT   23 __data_start
-    52: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND __gmon_start__
-    53: 0000000000201008     0 OBJECT  GLOBAL HIDDEN    23 __dso_handle
-    54: 00000000000006f0     4 OBJECT  GLOBAL DEFAULT   16 _IO_stdin_used
-    55: 0000000000000670   101 FUNC    GLOBAL DEFAULT   14 __libc_csu_init
-    56: 0000000000201020     0 NOTYPE  GLOBAL DEFAULT   24 _end
-    57: 0000000000000530    43 FUNC    GLOBAL DEFAULT   14 _start
-    58: 0000000000201014     0 NOTYPE  GLOBAL DEFAULT   24 __bss_start
-    59: 000000000000063a    51 FUNC    GLOBAL DEFAULT   14 main
-    60: 0000000000201018     4 OBJECT  GLOBAL DEFAULT   24 global_var_in_bss
-    61: 0000000000201018     0 OBJECT  GLOBAL HIDDEN    23 __TMC_END__
-    62: 0000000000000000     0 NOTYPE  WEAK   DEFAULT  UND _ITM_registerTMCloneTable
-    63: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND __cxa_finalize@@GLIBC_2.2
-    64: 00000000000004e8     0 FUNC    GLOBAL DEFAULT   11 _init
-
-```
-
-**`Num`** field indexes the symbol table.<br>
-**`value`** field indicates the location of the symbol in virtual address space.<br>
-**`Size`** field indicates the size in bytes of the . Verify the size of 'global_var_in_bss', i.e. of datatype 'uint32_t' (32-bits), whereas for function symbol *main*, it indicates the size of main(), i.e. 51 bytes.<br>
-
-**`type`** indicates the type of symbol.<br>
-
-| TYPE  | DESCRIPTION |
-| :----: | :---------- |
-| NOTYPE | Type not defined |
-| SECTION | Symbol is associated with a section |
-| FILE  | Associated with name of a source file |
-| FUNC  | Associated with a function |
-| OBJECT | Associated with data objects in executable (eg: variable names) |
-
-
-**`bind`** indicates the 'scope' of a symbol. A function can be made of scope 'WEAK' by assigning attribute to it, i.e. by placing *\_\_attribute\_\_((weak))* before any function declaration (in C programming language). 
-
-| SCOPE | DESCRIPTION |
-| :---: | :---------- |
-| LOCAL | These are those symbols which are locally available to the object file.
-| GLOBAL| These are the symbols available to other object files at the time of<br> linking. For eg: 'global_var_in_bss' defined in [sd.c] |
-| WEAK  | The definition of these symbols can be redefined. |
-
-
-**`Vis`** indicates the **visibility** of the symbol. Mainly of 2 types.<br>
-
-| VISIBILITY | DESCRIPTION |
-| :--------: | :---------- |
-| HIDDEN     | The name of the symbol is not visible outside of the running program.<br> Eg: LOCAL symbols|
-| DEFAULT    | Visibility depends on the how binding of symbol is done, i.e. GLOABAL<br> AND WEAK symbols are visible as DEFAULT. |
-
-**`Ndx`** field here contains the index into SHT. This field indicates the section in which the symbol is placed. Bellow are some special values for 'Ndx' field. 2 common types are explained bellow.<br> 
-
-| TYPE | DESCRIPTION |
-| :--: | :---------- |
-| ABS  | Index remains the same even afer symbol relocation. |
-| UND  | Symbols from the shared library, available at runtime are represented as UND. |
-
-**`name`** Contains the name of the symbol.
 
 ### .STRTAB 
 This section contains ASCII strings representing names of **static symbols** defined in *.symtab* section. Let's dump strings from .strtab section using readelf's -p flag.
@@ -354,7 +226,7 @@ Here, `d_tag` is the dynamic tag that defines the interpretation of `d_un` struc
 * DT_STRTAB : an entry for .dynstr section.
 * DT_SYMTAB : an entry for .dynsym section.
 * DT_BIND_NOW : an entry which instructs the linker to resolve all relocations before transferring control to the executable. This stops the dynamic linker to perform delay loading.
-* DT_SYMBOLIC : according to `man 5 elf` - "Alert linker to search this shared object before the executable for symbols". Which might mean that if a shared object is compiled with this attribute set, it will be searched for symbols before the executable itself.
+* DT_SYMBOLIC : according to `man 5 elf` - "Alert linker to search this shared object before the executable for symbols". Which might mean that if a shared object is compiled with this attribute set, it will be searched for symbols before the executable itself. These type of binaries should probably be flagged for such behavior.
 
 
 ### .GNU.HASH 
@@ -412,6 +284,7 @@ Stores the relocation table for the fixup of **function symbols** during dynamic
 [sd]: ./sd
 [sd.c]: ./sd.c
 [stack buffer overflow]: http://phrack.org/issues/49/14.html
+[Symbols]: ./../../SYMBOLS/SYMBOLS.md
 [here]: http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html
 
 [PREV - SECTION HEADER TABLE]: ./../SHT.md
